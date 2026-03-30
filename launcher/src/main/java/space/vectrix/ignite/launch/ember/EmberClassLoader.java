@@ -86,7 +86,7 @@ public final class EmberClassLoader extends ClassLoader {
   private final EmberTransformer transformer;
 
   private Function<URLConnection, Manifest> manifestLocator;
-  private Function<URLConnection, CodeSource> sourceLocator;
+  private final Function<URLConnection, CodeSource> sourceLocator;
   private Predicate<String> transformationFilter;
 
   /* package */ EmberClassLoader(final @NotNull EmberTransformer transformer) {
@@ -144,10 +144,41 @@ public final class EmberClassLoader extends ClassLoader {
     return this.findLoadedClass(canonicalName) != null;
   }
 
+  /**
+   * Launches BungeeCord with Ignite support.
+   *
+   * @param igniteBootstrap Contains data for the Ignite bootstrap.
+   * @since 1.2.0
+   */
+  public static void runBungeeCord(final Runnable igniteBootstrap) {
+    try {
+      igniteBootstrap.run();
+    } catch (final Throwable t) {
+      t.printStackTrace(System.err);
+    }
+  }
+
   @Override
   protected @NotNull Class<?> loadClass(final @NotNull String name, final boolean resolve) throws ClassNotFoundException {
     synchronized(this.getClassLoadingLock(name)) {
       final String canonicalName = name.replace('/', '.');
+
+      if (canonicalName.startsWith("net.md_5.bungee")
+        || canonicalName.startsWith("io.netty")) {
+        Logger.trace("Delegating to parent: {}", canonicalName);
+        final Class<?> target = this.parent.loadClass(canonicalName);
+        if (resolve) this.resolveClass(target);
+        return target;
+      }
+
+      if (canonicalName.startsWith("net.md_5.bungee.api.plugin")
+        // || canonicalName.startsWith("net.md_5.bungee.api")
+        || canonicalName.startsWith("net.md_5.bungee.plugin")) {
+        Logger.trace("Delegating Bungee class to parent: {}", canonicalName);
+        final Class<?> target = this.parent.loadClass(canonicalName);
+        if (resolve) this.resolveClass(target);
+        return target;
+      }
 
       Class<?> target = this.findLoadedClass(canonicalName);
       if(target == null) {
