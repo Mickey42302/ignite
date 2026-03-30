@@ -163,6 +163,9 @@ The following targets could use the following flags:
 
 - Velocity:
   - Service name: `velocity` (e.g `-Dignite.locator=velocity`)
+ 
+- BungeeCord:
+  - Service name: `bungeecord` (e.g `-Dignite.locator=bungeecord`)
 
 ## Building
 __Note:__ If you do not have [Gradle] installed then use `./gradlew` for Unix systems or Git Bash and gradlew.bat for Windows systems in 
